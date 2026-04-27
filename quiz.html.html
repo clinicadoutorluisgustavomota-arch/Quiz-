@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Nutricional — Dr. Luís Gustavo Mota</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black:      #000000;
+    --gold:       #bf9f59;
+    --gold-light: #d4b86a;
+    --gold-dark:  #9a7f3f;
+    --gold-glow:  rgba(191,159,89,0.22);
+    --white:      #ffffff;
+    --dim:        rgba(255,255,255,0.65);
+    --faint:      rgba(255,255,255,0.07);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Geist', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: .65;
+  }
+  body::after {
+    content: '';
+    position: fixed; top: -25%; left: 50%;
+    transform: translateX(-50%);
+    width: 90vw; height: 55vh;
+    background: radial-gradient(ellipse, rgba(191,159,89,.055) 0%, transparent 68%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 20px;
+    z-index: 1;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.45s ease;
+    overflow-y: auto;
+  }
+  .screen.active { opacity: 1; pointer-events: all; }
+  .screen.active .container { animation: fadeUp 0.45s ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  #screen-result {
+    align-items: flex-start;
+    padding-top: 40px; padding-bottom: 64px;
+  }
+  .container { width: 100%; max-width: 600px; margin: auto; }
+
+  /* ── BRAND ── */
+  .brand { text-align: center; margin-bottom: 28px; }
+  .brand-eyebrow {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 300;
+    font-size: 12px; letter-spacing: .35em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 5px;
+  }
+  .brand-rule { width: 36px; height: 1px; background: var(--gold); opacity: .45; margin: 7px auto; }
+  .brand-spec { font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
+
+  /* ── WELCOME ── */
+  .welcome-title {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: clamp(26px, 6.5vw, 46px);
+    font-weight: 400; line-height: 1.15;
+    text-align: center; margin-bottom: 14px;
+  }
+  .welcome-title em { color: var(--gold); }
+  .welcome-sub {
+    font-size: 15px; color: var(--dim);
+    text-align: center; line-height: 1.65; margin-bottom: 30px;
+  }
+
+  /* ── EBOOK TEASER CARD ── */
+  .ebook-card {
+    background: linear-gradient(140deg, rgba(191,159,89,.09) 0%, rgba(191,159,89,.03) 100%);
+    border: 1px solid rgba(191,159,89,.28);
+    border-radius: 14px; padding: 22px 24px;
+    margin-bottom: 30px; position: relative; overflow: hidden;
+  }
+  .ebook-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .ebook-tag {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    letter-spacing: .2em; text-transform: uppercase;
+    color: var(--gold); background: rgba(191,159,89,.12);
+    padding: 3px 10px; border-radius: 20px; margin-bottom: 12px;
+  }
+  .ebook-title {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 20px; color: var(--white); margin-bottom: 8px; line-height: 1.3;
+  }
+  .ebook-title em { color: var(--gold); }
+  .ebook-desc {
+    font-size: 13.5px; color: var(--dim); line-height: 1.6; margin-bottom: 12px;
+  }
+  .ebook-desc strong { color: var(--white); }
+  .ebook-hint {
+    font-size: 12px; color: rgba(255,255,255,.35);
+    font-style: italic; display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ── INPUT ── */
+  .input-group { margin-bottom: 18px; }
+  .input-label {
+    display: block; font-size: 11.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
+  }
+  .input-field {
+    width: 100%; background: var(--faint);
+    border: 1px solid rgba(191,159,89,.2);
+    border-radius: 9px; padding: 14px 18px;
+    font-family: 'Geist', sans-serif; font-size: 16px;
+    color: var(--white); outline: none;
+    transition: border-color .3s, box-shadow .3s;
+  }
+  .input-field::placeholder { color: rgba(255,255,255,.28); }
+  .input-field:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+  .input-error { font-size: 12px; color: #e05c5c; margin-top: 6px; display: none; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: block; width: 100%; padding: 16px 24px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--black); font-family: 'Geist', sans-serif;
+    font-size: 15px; font-weight: 600; letter-spacing: .04em;
+    border: none; border-radius: 10px; cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+    text-decoration: none; text-align: center;
+  }
+  .btn::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,.16), transparent);
+    opacity: 0; transition: opacity .2s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(191,159,89,.42); }
+  .btn:hover::after { opacity: 1; }
+  .btn:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: transparent; color: var(--gold);
+    border: 1px solid rgba(191,159,89,.35);
+    margin-top: 12px; font-size: 13px; padding: 12px 24px;
+  }
+  .btn-ghost:hover { background: var(--gold-glow); box-shadow: 0 4px 18px rgba(191,159,89,.2); }
+
+  .btn-wa {
+    background: linear-gradient(135deg, #25d366, #128c4a);
+    color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-wa:hover { box-shadow: 0 8px 30px rgba(37,211,102,.38); }
+  .btn-wa svg { width: 20px; height: 20px; fill: white; flex-shrink: 0; }
+
+  .btn-ebook {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--black);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-size: 16px; font-weight: 700; padding: 18px 24px;
+    border-radius: 12px; text-decoration: none;
+    transition: transform .2s, box-shadow .2s;
+    margin-bottom: 6px;
+  }
+  .btn-ebook:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(191,159,89,.5); }
+  .btn-ebook span { font-size: 22px; }
+
+  /* ── PROGRESS ── */
+  .progress-wrap { margin-bottom: 26px; }
+  .progress-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .progress-label { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .progress-count { font-size: 11px; color: var(--gold); font-weight: 500; }
+  .progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,.07); border-radius: 2px; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+    border-radius: 2px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 0 10px var(--gold-glow);
+  }
+
+  /* ── QUESTION ── */
+  .q-category {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: var(--gold); background: rgba(191,159,89,.1);
+    padding: 3px 11px; border-radius: 20px; margin-bottom: 16px;
+  }
+  .q-text {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: clamp(20px, 4.5vw, 29px);
+    font-weight: 400; line-height: 1.3;
+    color: var(--white); margin-bottom: 26px;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    width: 100%; background: var(--faint);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px; padding: 13px 16px;
+    color: var(--white); font-family: 'Geist', sans-serif;
+    font-size: 14px; line-height: 1.45; text-align: left;
+    cursor: pointer; display: flex; align-items: center; gap: 12px;
+    transition: all .22s;
+  }
+  .opt:hover { background: rgba(191,159,89,.1); border-color: rgba(191,159,89,.38); transform: translateX(4px); }
+  .opt.selected { background: rgba(191,159,89,.14); border-color: var(--gold); box-shadow: 0 0 18px rgba(191,159,89,.14); }
+  .opt-letter {
+    min-width: 27px; height: 27px;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--dim); flex-shrink: 0; transition: all .22s;
+  }
+  .opt.selected .opt-letter { background: var(--gold); border-color: var(--gold); color: var(--black); }
+
+  /* ── LOADING ── */
+  .loading-wrap { text-align: center; }
+  .spinner {
+    width: 60px; height: 60px;
+    border: 2px solid rgba(191,159,89,.14); border-top: 2px solid var(--gold);
+    border-radius: 50%; margin: 0 auto 30px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-phrase {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 21px; color: var(--white); min-height: 30px;
+    transition: opacity .35s; margin-bottom: 8px;
+  }
+  .loading-hint { font-size: 13px; color: var(--dim); letter-spacing: .05em; }
+  .dots span { animation: blink 1.4s infinite; opacity: 0; }
+  .dots span:nth-child(2) { animation-delay: .2s; }
+  .dots span:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+  /* ── RESULT ── */
+  .r-headline {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: clamp(24px, 5.5vw, 38px);
+    font-weight: 400; line-height: 1.2; margin-bottom: 8px;
+    color: var(--white);
+  }
+  .r-headline em { color: var(--gold); }
+
+  .divider-gold {
+    width: 48px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 20px 0;
+  }
+
+  .diag-card {
+    background: var(--faint); border-radius: 12px;
+    padding: 22px 24px; margin-bottom: 16px;
+    border-left: 3px solid var(--gold);
+  }
+  .diag-card p {
+    font-size: 15px; line-height: 1.8;
+    color: rgba(255,255,255,.87); margin-bottom: 14px;
+  }
+  .diag-card p:last-child { margin-bottom: 0; }
+  .diag-card p strong { color: var(--white); font-weight: 600; }
+  .diag-card p em { color: var(--gold); font-style: italic; }
+
+  /* ebook reveal box */
+  .ebook-reveal {
+    background: linear-gradient(140deg, rgba(191,159,89,.12) 0%, rgba(191,159,89,.04) 100%);
+    border: 1px solid rgba(191,159,89,.35);
+    border-radius: 14px; padding: 24px 24px 20px;
+    margin-bottom: 20px; position: relative; overflow: hidden;
+    text-align: center;
+  }
+  .ebook-reveal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .ebook-reveal-icon { font-size: 40px; margin-bottom: 12px; display: block; }
+  .ebook-reveal-title {
+    font-family: 'Fraunces', serif; font-style: italic;
+    font-size: 20px; color: var(--white); margin-bottom: 8px; line-height: 1.3;
+  }
+  .ebook-reveal-title em { color: var(--gold); }
+  .ebook-reveal-desc {
+    font-size: 13.5px; color: var(--dim); line-height: 1.6; margin-bottom: 20px;
+  }
+
+  /* wa section */
+  .wa-section {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 12px; padding: 20px 22px; margin-bottom: 16px;
+  }
+  .wa-section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--dim); margin-bottom: 8px;
+  }
+  .wa-section-text {
+    font-size: 13.5px; color: var(--dim); line-height: 1.6; margin-bottom: 16px;
+  }
+  .wa-section-text strong { color: var(--white); }
+  .cta-hint { font-size: 11px; color: rgba(255,255,255,.28); text-align: center; margin: 6px 0 20px; }
+
+  /* bonus chips */
+  .bonus-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .bonus-chip {
+    background: rgba(191,159,89,.08); border: 1px solid rgba(191,159,89,.2);
+    border-radius: 8px; padding: 8px 12px;
+    font-size: 12.5px; color: var(--dim); line-height: 1.4;
+    flex: 1; min-width: 140px;
+  }
+  .bonus-chip strong { color: var(--gold); display: block; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 3px; }
+
+  .int-note {
+    background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.055);
+    border-radius: 8px; padding: 12px 16px;
+    font-size: 11px; color: rgba(255,255,255,.3); line-height: 1.55; margin-bottom: 20px;
+  }
+  .int-note-lbl {
+    font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+    color: rgba(255,255,255,.18); margin-bottom: 4px;
+  }
+
+  @media (max-width: 520px) {
+    .ebook-card, .diag-card, .ebook-reveal, .wa-section { padding: 16px; }
+    .opt { padding: 12px 13px; font-size: 13px; }
+    .bonus-chip { min-width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ TELA 1: BOAS-VINDAS ═══ -->
+<div class="screen active" id="screen-welcome">
+  <div class="container">
+    <div class="brand">
+      <div class="brand-eyebrow">Dr. Luís Gustavo Mota</div>
+      <div class="brand-rule"></div>
+      <div class="brand-spec">Nutrição Comportamental</div>
+    </div>
+
+    <h1 class="welcome-title">
+      Descubra em <em>3 minutos</em> o que está travando seus resultados
+    </h1>
+    <p class="welcome-sub">
+      Responda 10 perguntas rápidas e receba um diagnóstico personalizado — e um presente especial no final.
+    </p>
+
+    <div class="ebook-card">
+      <span class="ebook-tag">📘 Presente exclusivo</span>
+      <div class="ebook-title">Ao finalizar, você recebe um <em>e-book exclusivo e personalizado</em> — direto do Nutri.</div>
+      <p class="ebook-desc">
+        Um material pensado especialmente para o seu momento, com base no que você compartilhar aqui. <strong>Não é um e-book genérico</strong> — é um presente feito pra você.
+      </p>
+      <div class="ebook-hint">✦ Gratuito · Exclusivo · Liberado assim que você finalizar.</div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label" for="lead-name">Seu primeiro nome</label>
+      <input class="input-field" id="lead-name" type="text" placeholder="Ex: Mariana" autocomplete="off" maxlength="40">
+      <div class="input-error" id="name-error">Por favor, insira seu nome para continuar.</div>
+    </div>
+
+    <button class="btn" onclick="startQuiz()">Começar meu diagnóstico →</button>
+  </div>
+</div>
+
+<!-- ═══ TELA 2: PERGUNTA ═══ -->
+<div class="screen" id="screen-question">
+  <div class="container">
+    <div class="brand">
+      <div class="brand-eyebrow">Dr. Luís Gustavo Mota</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span class="progress-label">Diagnóstico</span>
+        <span class="progress-count" id="prog-count">1 / 10</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="prog-fill" style="width:10%"></div>
+      </div>
+    </div>
+    <div id="q-area"></div>
+  </div>
+</div>
+
+<!-- ═══ TELA 3: LOADING ═══ -->
+<div class="screen" id="screen-loading">
+  <div class="container">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-phrase" id="l-phrase">Analisando suas respostas…</div>
+      <div class="loading-hint">Preparando seu diagnóstico e seu presente <span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA 4: RESULTADO ═══ -->
+<div class="screen" id="screen-result">
+  <div class="container" id="result-wrap"></div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────
+const WA       = '5511914893385';
+const EBOOK    = 'https://drive.google.com/drive/folders/1RKwVGiaTecSYUJl2V8QJNXsiNjLsz5Jp?usp=sharing';
+const MAX      = 50;
+
+// ─── STATE ────────────────────────────────
+let uName = '', cur = 0, score = 0, answers = [], busy = false;
+
+// ─── QUESTIONS ────────────────────────────
+const QS = [
+  {
+    cat: '🔎 Dor principal',
+    q: 'O que mais te incomoda na sua relação com o peso e a alimentação hoje?',
+    opts: [
+      { t: 'Não consigo emagrecer, mesmo tentando de várias formas', s: 5 },
+      { t: 'Tenho compulsão alimentar — como sem controle', s: 5 },
+      { t: 'Emagreço, mas volto a engordar sempre', s: 4 },
+      { t: 'Não me sinto bem com meu corpo e não sei por onde começar', s: 3 },
+    ]
+  },
+  {
+    cat: '⏳ Urgência',
+    q: 'Há quanto tempo você convive com esse problema?',
+    opts: [
+      { t: 'Mais de 5 anos — já me acostumei, mas cansei', s: 5 },
+      { t: 'Entre 2 e 5 anos — já tentei muita coisa', s: 4 },
+      { t: 'Entre 6 meses e 2 anos — a situação piorou recentemente', s: 3 },
+      { t: 'Menos de 6 meses — mas já quero resolver logo', s: 2 },
+    ]
+  },
+  {
+    cat: '📋 Histórico',
+    q: 'Quantas vezes você já tentou mudar sua alimentação ou emagrecer?',
+    opts: [
+      { t: 'Perdi as contas — tentei de tudo e nada durou', s: 5 },
+      { t: 'Muitas vezes — começo bem, mas não sustento', s: 5 },
+      { t: 'Algumas vezes — com resultados parciais', s: 3 },
+      { t: 'Poucas vezes — nunca levei muito a sério ainda', s: 2 },
+    ]
+  },
+  {
+    cat: '🧠 Barreira comportamental',
+    q: 'O que costuma te fazer abandonar uma alimentação mais saudável?',
+    opts: [
+      { t: 'Ansiedade e estresse — como para me aliviar', s: 5 },
+      { t: 'Falta de tempo e rotina desorganizada', s: 4 },
+      { t: 'Pressão social em festas e saídas', s: 3 },
+      { t: 'Tédio — como quando não tenho nada para fazer', s: 4 },
+    ]
+  },
+  {
+    cat: '💔 Impacto na vida',
+    q: 'Como esse problema afeta seu dia a dia?',
+    opts: [
+      { t: 'Prejudica minha autoestima e como me vejo', s: 5 },
+      { t: 'Evito situações sociais por causa do meu corpo', s: 5 },
+      { t: 'Falta energia e disposição para o que amo fazer', s: 4 },
+      { t: 'Me incomoda, mas ainda não afeta muito minha rotina', s: 2 },
+    ]
+  },
+  {
+    cat: '😨 Medo profundo',
+    q: 'Qual é o seu maior medo se nada mudar?',
+    opts: [
+      { t: 'Desenvolver uma doença grave por causa do peso', s: 5 },
+      { t: 'Nunca me sentir bem comigo mesma e perder oportunidades', s: 5 },
+      { t: 'Não ter energia para acompanhar minha família', s: 4 },
+      { t: 'Perder ainda mais o controle sobre a alimentação', s: 4 },
+    ]
+  },
+  {
+    cat: '🍫 Relação com a comida',
+    q: 'Como você descreve sua relação emocional com a comida?',
+    opts: [
+      { t: 'A comida é meu conforto nos momentos difíceis', s: 5 },
+      { t: 'Como bem na semana, mas perco o controle no fim de semana', s: 4 },
+      { t: 'Sinto culpa toda vez que como algo "proibido"', s: 4 },
+      { t: 'Não é muito emocional — é mais falta de organização', s: 2 },
+    ]
+  },
+  {
+    cat: '🌟 Resultado desejado',
+    q: 'Se tivesse o resultado ideal em 3 meses, como seria?',
+    opts: [
+      { t: 'Me sentir leve, saudável e gostar do que vejo no espelho', s: 5 },
+      { t: 'Ter uma relação tranquila com a comida, sem culpa', s: 5 },
+      { t: 'Emagrecer com prazer, sem dietas restritivas', s: 5 },
+      { t: 'Ter mais energia e disposição no dia a dia', s: 3 },
+    ]
+  },
+  {
+    cat: '💪 Comprometimento',
+    q: 'Com que disposição você está para se comprometer com uma mudança real?',
+    opts: [
+      { t: 'Totalmente comprometida — farei o necessário para mudar', s: 5 },
+      { t: 'Tenho disponibilidade, desde que seja um processo realista', s: 4 },
+      { t: 'Me comprometo, mas preciso de flexibilidade', s: 3 },
+      { t: 'Ainda tenho dúvidas se vou conseguir manter a consistência', s: 2 },
+    ]
+  },
+  {
+    cat: '🚀 Momento de decisão',
+    q: 'Se encontrasse o suporte ideal hoje, quando estaria pronta para começar?',
+    opts: [
+      { t: 'Imediatamente — já cansei de adiar', s: 5 },
+      { t: 'Nesta semana — quero resolver logo', s: 4 },
+      { t: 'No próximo mês — preciso me organizar antes', s: 2 },
+      { t: 'Ainda estou avaliando, sem prazo definido', s: 1 },
+    ]
+  },
+];
+
+// ─── NAV ──────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function esc(s) { return s.replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
+
+// ─── START ────────────────────────────────
+function startQuiz() {
+  const inp = document.getElementById('lead-name');
+  const err = document.getElementById('name-error');
+  const v = inp.value.trim();
+  if (!v || v.length < 2) { err.style.display = 'block'; inp.focus(); return; }
+  err.style.display = 'none';
+  uName = v.charAt(0).toUpperCase() + v.slice(1);
+  cur = 0; score = 0; answers = [];
+  renderQ(); show('screen-question');
+}
+
+// ─── RENDER QUESTION ──────────────────────
+function renderQ() {
+  const q   = QS[cur];
+  const pct = ((cur + 1) / QS.length) * 100;
+  document.getElementById('prog-count').textContent = `${cur + 1} / ${QS.length}`;
+  document.getElementById('prog-fill').style.width  = pct + '%';
+  const letters = ['A','B','C','D'];
+  const opts = q.opts.map((o, i) => `
+    <button class="opt" onclick="pick(this,${o.s},'${esc(o.t)}')">
+      <span class="opt-letter">${letters[i]}</span>
+      <span>${esc(o.t)}</span>
+    </button>`).join('');
+  document.getElementById('q-area').innerHTML = `
+    <span class="q-category">${q.cat}</span>
+    <div class="q-text">${q.q}</div>
+    <div class="options">${opts}</div>`;
+}
+
+// ─── PICK ─────────────────────────────────
+function pick(btn, pts, txt) {
+  if (busy) return; busy = true;
+  document.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  answers.push({ a: txt, s: pts });
+  setTimeout(() => {
+    busy = false; score += pts; cur++;
+    cur < QS.length ? renderQ() : runLoading();
+  }, 480);
+}
+
+// ─── LOADING ──────────────────────────────
+const phrases = [
+  'Analisando suas respostas…',
+  'Identificando seus padrões…',
+  'Mapeando suas barreiras…',
+  'Construindo seu diagnóstico…',
+  'Preparando seu presente…',
+];
+function runLoading() {
+  show('screen-loading');
+  let i = 0;
+  const el = document.getElementById('l-phrase');
+  el.textContent = phrases[0];
+  const iv = setInterval(() => {
+    i++;
+    if (i < phrases.length) {
+      el.style.opacity = '0';
+      setTimeout(() => { el.textContent = phrases[i]; el.style.opacity = '1'; }, 320);
+    }
+  }, 900);
+  setTimeout(() => { clearInterval(iv); buildResult(); show('screen-result'); window.scrollTo(0,0); }, 5000);
+}
+
+// ─── RESULT ───────────────────────────────
+function getTier() {
+  const p = (score / MAX) * 100;
+  if (p >= 80) return 'hot';
+  if (p >= 58) return 'warm';
+  if (p >= 37) return 'cool';
+  return 'cold';
+}
+
+function buildResult() {
+  const t   = getTier();
+  const pct = Math.round((score / MAX) * 100);
+
+  const pain    = answers[0]?.a || 'dificuldades com o peso';
+  const time    = answers[1]?.a || 'algum tempo';
+  const tries   = answers[2]?.a || 'várias tentativas';
+  const barrier = answers[3]?.a || 'barreiras emocionais';
+  const impact  = answers[4]?.a || 'impacto na sua vida';
+  const fear    = answers[5]?.a || 'medo de não mudar';
+  const emotion = answers[6]?.a || 'relação com a comida';
+  const goal    = answers[7]?.a || 'resultado transformador';
+  const commit  = answers[8]?.a || 'comprometimento';
+  const timing  = answers[9]?.a || 'pronta para começar';
+
+  // ── Roteiros por tier ──────────────────
+  const scripts = {
+
+    hot: {
+      headline: `${uName}, você já sabe que é hora de mudar.`,
+      paragraphs: [
+        `Tem uma exaustão silenciosa que aparece quando a gente já tentou muito — e ainda não chegou onde queria. Você conhece esse sentimento de perto. E mesmo assim, aqui está você: buscando, de novo. Isso não é teimosia. É uma força que merece ser direcionada da forma certa, com quem realmente entende o que está acontecendo com você.`,
+        `A sua relação com a comida vai muito além do prato. Ela passa pelas suas emoções, pela sua rotina, pelos momentos em que você está no limite e a comida parece o único alívio disponível. Isso não tem nada a ver com disciplina. Tem a ver com o que ninguém ainda te ensinou a fazer diferente — e é exatamente aí que a nutrição comportamental entra.`,
+        `${uName}, o seu diagnóstico aponta para alguém que está pronta. Não perfeita, não sem medos — mas pronta. E a diferença entre mais uma tentativa frustrada e uma mudança real está em ter o suporte certo ao seu lado. Não uma dieta. Um processo. Uma pessoa que te veja de verdade.`,
+      ],
+      waText: `Olá! Sou ${uName} e acabei de fazer o diagnóstico do Dr. Luís. Quero receber meu e-book exclusivo! 📘`,
+      waLabel: '💬 Quero conversar com o Dr. Luís',
+      waHint: 'Ele mesmo vai te responder — sem robô, sem roteiro.',
+      internal: `<!-- NOTA INTERNA | TIER: QUENTE | Score: ${score}/${MAX} (${pct}%) | Dor: ${pain} | Barreira: ${barrier} | Medo: ${fear} | Timing: ${timing} | AÇÃO: Abordagem direta e humana. Proposta de conversa individual. -->`,
+    },
+
+    warm: {
+      headline: `${uName}, a culpa nunca foi sua.`,
+      paragraphs: [
+        `Dietas ensinam a gente a obedecer regras — mas não ensinam o que fazer quando a vida não segue regras. Quando o cansaço chega, quando a ansiedade bate, quando o fim de semana vira exceção que vira rotina. Você já viveu esse ciclo. E se chegou até aqui, é porque sabe que tem algo que ainda não encaixou.`,
+        `O que faz a diferença não é ter mais força de vontade. É entender por que certos padrões se repetem — e o que está por trás deles. A sua relação com a comida carrega histórias, emoções e gatilhos que nenhuma planilha de macros consegue resolver. Mas uma abordagem que olha pra você como pessoa inteira, sim.`,
+        `Você tem clareza sobre o que quer, ${uName}. O próximo passo é encontrar um caminho que respeite quem você é — sem abrir mão de resultados reais e duradouros.`,
+      ],
+      waText: `Olá! Sou ${uName} e acabei de fazer o diagnóstico do Dr. Luís. Quero receber meu e-book exclusivo! 📘`,
+      waLabel: '💬 Quero saber mais sobre o acompanhamento',
+      waHint: 'Sem pressão — só uma conversa.',
+      internal: `<!-- NOTA INTERNA | TIER: MORNO | Score: ${score}/${MAX} (${pct}%) | Dor: ${pain} | Emoção: ${emotion} | Meta: ${goal} | Barreira: ${barrier} | AÇÃO: Tom consultivo. Mostrar diferencial comportamental. Quebrar objeção de método. -->`,
+    },
+
+    cool: {
+      headline: `${uName}, cuidar de si mesma começa com pequenos gestos.`,
+      paragraphs: [
+        `E você acabou de dar um deles. Responder esse quiz com honestidade — olhar para dentro e nomear o que incomoda — já é um movimento de quem se importa com o próprio bem-estar. Isso não é pouco. É o começo de tudo.`,
+        `Às vezes a gente não está pronta para grandes mudanças. Mas está pronta para uma conversa. Para entender o que está acontecendo. Para receber um conteúdo que faça sentido para o seu momento. E é exatamente isso que o e-book que você vai receber foi pensado para oferecer.`,
+        `Quando você sentir que é hora de dar um próximo passo, ${uName} — seja daqui a dias ou meses — estaremos aqui. Sem cobrança, sem pressa. Com o mesmo cuidado que você acabou de ter consigo mesma.`,
+      ],
+      waText: `Olá! Sou ${uName} e acabei de fazer o diagnóstico do Dr. Luís. Quero receber meu e-book exclusivo! 📘`,
+      waLabel: '💬 Quero entender melhor, sem compromisso',
+      waHint: 'Sem pressa — quando você quiser.',
+      internal: `<!-- NOTA INTERNA | TIER: FRIO | Score: ${score}/${MAX} (${pct}%) | Impacto: ${impact} | Medo: ${fear} | Timing: ${timing} | AÇÃO: Sem pressão. Nutrir com conteúdo, manter contato, esperar maturação. -->`,
+    },
+
+    cold: {
+      headline: `${uName}, às vezes uma pergunta já é o suficiente.`,
+      paragraphs: [
+        `A gente não precisa estar em crise para buscar algo melhor. Às vezes é só uma inquietação, uma sensação de que algo poderia ser diferente — sem saber exatamente o quê. E isso já diz muito sobre quem você é.`,
+        `Você chegou até aqui por algum motivo. Pode ser que ainda não seja o momento de uma mudança grande. Mas talvez seja o momento de receber algo que plante uma semente — um conteúdo que te faça ver a sua relação com a comida de um ângulo diferente, sem julgamento e sem cobranças.`,
+        `O e-book que preparamos pra você foi pensado exatamente para esse momento. Leve, acolhedor, e cheio de informação que faz sentido na vida real. Aproveite, ${uName}. E se um dia quiser conversar, a gente está aqui.`,
+      ],
+      waText: `Olá! Sou ${uName} e acabei de fazer o diagnóstico do Dr. Luís. Quero receber meu e-book exclusivo! 📘`,
+      waLabel: '💬 Quero tirar algumas dúvidas',
+      waHint: 'Sem compromisso nenhum.',
+      internal: `<!-- NOTA INTERNA | TIER: EXPLORATÓRIO | Score: ${score}/${MAX} (${pct}%) | Dor: ${pain} | AÇÃO: Acolhimento. Conteúdo educativo. Não vender agora. -->`,
+    },
+  };
+
+  const d = scripts[t];
+  const diagHTML = d.paragraphs.map(p => `<p>${p}</p>`).join('');
+  const waMsg  = encodeURIComponent(d.waText);
+  const waLink = `https://wa.me/${WA}?text=${waMsg}`;
+
+  document.getElementById('result-wrap').innerHTML = `
+    <div>
+      <div class="brand" style="margin-bottom:20px">
+        <div class="brand-eyebrow">Dr. Luís Gustavo Mota</div>
+        <div class="brand-rule"></div>
+        <div class="brand-spec">Seu diagnóstico</div>
+      </div>
+
+      <div class="r-headline">${d.headline}</div>
+      <div class="divider-gold"></div>
+
+      <div class="diag-card">${diagHTML}</div>
+
+      <div class="divider-gold"></div>
+
+      <!-- EBOOK + WA UNIFICADO -->
+      <div class="ebook-reveal">
+        <span class="ebook-reveal-icon">📘</span>
+        <div class="ebook-reveal-title">Seu e-book exclusivo está esperando por você, <em>${uName}</em>.</div>
+        <p class="ebook-reveal-desc">
+          Para receber o seu material — personalizado e exclusivo do Nutri — é só mandar uma mensagem pelo WhatsApp. A gente te envia na hora, sem burocracia, com todo o carinho. 🤍
+        </p>
+        <a href="${waLink}" target="_blank" rel="noopener" style="text-decoration:none;display:block;">
+          <button class="btn btn-wa" style="font-size:15px;padding:17px 24px;border-radius:11px;">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+              <path d="M11.998 2C6.477 2 2 6.477 2 12c0 1.853.505 3.587 1.383 5.074L2 22l5.051-1.368A9.93 9.93 0 0011.998 22c5.522 0 10-4.478 10-10S17.52 2 11.998 2zm.002 18.188a8.15 8.15 0 01-4.146-1.127l-.298-.177-3.018.817.812-3.01-.194-.312A8.177 8.177 0 013.812 12c0-4.511 3.676-8.188 8.188-8.188 4.512 0 8.188 3.677 8.188 8.188 0 4.512-3.676 8.188-8.188 8.188z"/>
+            </svg>
+            Quero receber meu e-book grátis
+          </button>
+        </a>
+        <div style="font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.5;">
+          Você será direcionada para o WhatsApp do Dr. Luís —<br>a mensagem já vem preenchida, é só enviar. 💛
+        </div>
+      </div>
+
+      <button class="btn btn-ghost" onclick="resetQuiz()">↩ Refazer o quiz</button>
+      <!-- ${d.internal} -->
+    </div>`;
+}
+
+// ─── RESET ────────────────────────────────
+function resetQuiz() {
+  cur = 0; score = 0; answers = []; uName = '';
+  document.getElementById('lead-name').value = '';
+  document.getElementById('name-error').style.display = 'none';
+  show('screen-welcome'); window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
